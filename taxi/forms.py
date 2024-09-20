@@ -68,7 +68,7 @@ class DriverLicenseUpdateForm(DriverCreateForm):
 
     def save(self, commit=True):
         instance = self.instance
-        instance.license_number = self.cleaned_data['license_number']
+        instance.license_number = self.cleaned_data["license_number"]
 
         if commit:
             instance.save()
