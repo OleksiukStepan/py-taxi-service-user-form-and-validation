@@ -6,9 +6,3 @@ body {
     float: right;
     margin: 0 2px 0 2px;
 }
-
-.header-container {
-    display: flex;
-    flex-direction: column; /* Stack children vertically */
-    align-items: flex-start; /* Align items to the start */
-}

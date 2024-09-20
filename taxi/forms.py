@@ -18,33 +18,6 @@ class CarCreateForm(forms.ModelForm):
         fields = "__all__"
 
 
-# class DriverForm(forms.ModelForm):
-#     cars = forms.ModelMultipleChoiceField(
-#         queryset=Car.objects.all(),
-#         widget=forms.CheckboxSelectMultiple(),
-#         required=False,
-#     )
-#     license_number = forms.CharField(
-#         validators=[
-#             MaxLengthValidator(8),
-#             RegexValidator(
-#                 regex=r"^[A-Z]{3}",
-#                 message="The first 3 characters must be uppercase letters",
-#                 code="invalid_first_three_characters"
-#             ),
-#             RegexValidator(
-#                 regex=r"\d{5}$",
-#                 message="The last 5 characters must be numbers",
-#                 code="invalid_last_five_characters"
-#             )
-#         ]
-#     )
-#
-#     class Meta:
-#         model = Driver
-#         fields = "__all__"
-
-
 class DriverCreateForm(UserCreationForm):
     cars = forms.ModelMultipleChoiceField(
         queryset=Car.objects.all(),
@@ -92,3 +65,11 @@ class DriverLicenseUpdateForm(DriverCreateForm):
     class Meta:
         model = Driver
         fields = ("license_number",)
+
+    def save(self, commit=True):
+        instance = self.instance
+        instance.license_number = self.cleaned_data['license_number']
+
+        if commit:
+            instance.save()
+        return instance
