@@ -8,14 +8,14 @@
   <h1>
     Drivers
     {% if user.is_authenticated %}
-      <form action="{% url 'taxi:toggle-driver' car.id %}" method="post">
+      <form action="{% url 'taxi:car-detail' car.id %}" method="post">
         {% csrf_token %}
         {% if user.id in driver_ids %}
-          <button style="float: right; margin-top: -30px;" type="submit" class="btn btn-danger">
+          <button style="float: right; margin-top: -30px;" type="submit" name="Delete" class="btn btn-danger">
             Delete me from this car
           </button>
         {% else %}
-          <button style="float: right; margin-top: -30px;" type="submit" class="btn btn-success">
+          <button style="float: right; margin-top: -30px;" type="submit" name="Add" class="btn btn-success">
             Assign me to this car
           </button>
         {% endif %}
