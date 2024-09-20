@@ -18,7 +18,34 @@ class CarCreateForm(forms.ModelForm):
         fields = "__all__"
 
 
-class DriverForm(forms.ModelForm):
+# class DriverForm(forms.ModelForm):
+#     cars = forms.ModelMultipleChoiceField(
+#         queryset=Car.objects.all(),
+#         widget=forms.CheckboxSelectMultiple(),
+#         required=False,
+#     )
+#     license_number = forms.CharField(
+#         validators=[
+#             MaxLengthValidator(8),
+#             RegexValidator(
+#                 regex=r"^[A-Z]{3}",
+#                 message="The first 3 characters must be uppercase letters",
+#                 code="invalid_first_three_characters"
+#             ),
+#             RegexValidator(
+#                 regex=r"\d{5}$",
+#                 message="The last 5 characters must be numbers",
+#                 code="invalid_last_five_characters"
+#             )
+#         ]
+#     )
+#
+#     class Meta:
+#         model = Driver
+#         fields = "__all__"
+
+
+class DriverCreateForm(UserCreationForm):
     cars = forms.ModelMultipleChoiceField(
         queryset=Car.objects.all(),
         widget=forms.CheckboxSelectMultiple(),
@@ -40,9 +67,11 @@ class DriverForm(forms.ModelForm):
         ]
     )
 
-    class Meta:
+    class Meta(UserCreationForm.Meta):
         model = Driver
-        fields = "__all__"
+        fields = (
+            "username", "first_name", "last_name", "email", "license_number"
+        )
 
     def clean_license_number(self) -> str:
         license_number = self.cleaned_data["license_number"]
@@ -53,18 +82,12 @@ class DriverForm(forms.ModelForm):
         return license_number
 
 
-class DriverCreateForm(DriverForm, UserCreationForm):
-    class Meta(UserCreationForm.Meta):
-        model = Driver
-        fields = (
-            "username", "first_name", "last_name", "email", "license_number"
-        )
-
-
-class DriverLicenseUpdateForm(DriverForm):
-    def __init__(self, *args, **kwargs) -> None:
+class DriverLicenseUpdateForm(DriverCreateForm):
+    def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
-        self.fields.pop("cars", None)
+        for field_name in list(self.fields.keys()):
+            if field_name not in self.Meta.fields:
+                del self.fields[field_name]
 
     class Meta:
         model = Driver
