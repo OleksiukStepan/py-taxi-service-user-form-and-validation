@@ -4,8 +4,8 @@ from django.urls import reverse_lazy
 from django.views import generic
 from django.contrib.auth.mixins import LoginRequiredMixin
 
-from .forms import DriverCreateForm, DriverLicenseUpdateForm, CarCreateForm
-from .models import Driver, Car, Manufacturer
+from taxi.forms import DriverCreateForm, DriverLicenseUpdateForm, CarCreateForm
+from taxi.models import Driver, Car, Manufacturer
 
 
 @login_required
@@ -71,12 +71,24 @@ class CarListView(LoginRequiredMixin, generic.ListView):
 
 class CarDetailView(LoginRequiredMixin, generic.DetailView):
     model = Car
+    template_name = "taxi/car_detail.html"
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
         car = self.get_object()
         context["driver_ids"] = list(car.drivers.values_list("id", flat=True))
         return context
+
+    def post(self, request, *args, **kwargs):
+        car = self.get_object()
+        user = request.user
+
+        if "Add" in request.POST:
+            car.drivers.add(user)
+        elif "Delete" in request.POST:
+            car.drivers.remove(user)
+
+        return redirect("taxi:car-detail", pk=car.id)
 
 
 class CarCreateView(LoginRequiredMixin, generic.CreateView):
@@ -117,11 +129,6 @@ class DriverLicenseUpdateView(LoginRequiredMixin, generic.UpdateView):
     success_url = reverse_lazy("taxi:driver-list")
     template_name = "taxi/driver_form.html"
     form_class = DriverLicenseUpdateForm
-
-    def get_context_data(self, **kwargs):
-        context = super().get_context_data(**kwargs)
-        context["form_type"] = "license"
-        return context
 
 
 class DriverDeleteView(LoginRequiredMixin, generic.DeleteView):
