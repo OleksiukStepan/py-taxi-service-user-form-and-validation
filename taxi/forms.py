@@ -1,9 +1,28 @@
+import re
+
 from django import forms
-from django.contrib.auth.forms import UserCreationForm, UserChangeForm
+from django.contrib.auth.forms import UserCreationForm
 from django.core.exceptions import ValidationError
-from django.core.validators import MaxLengthValidator, RegexValidator
 
 from taxi.models import Driver, Car
+
+
+def validate_license_number(value):
+    if len(value) != 8:
+        raise ValidationError(
+            "License number must be exactly 8 characters long.",
+            code="invalid_length"
+        )
+    if not re.match(r"^[A-Z]{3}", value):
+        raise ValidationError(
+            "The first 3 characters must be uppercase letters",
+            code="invalid_first_three_characters"
+        )
+    if not re.search(r"\d{5}$", value):
+        raise ValidationError(
+            f"The last 5 characters must be numbers {value}",
+            code="invalid_last_five_characters"
+        )
 
 
 class CarCreateForm(forms.ModelForm):
@@ -19,25 +38,8 @@ class CarCreateForm(forms.ModelForm):
 
 
 class DriverCreateForm(UserCreationForm):
-    cars = forms.ModelMultipleChoiceField(
-        queryset=Car.objects.all(),
-        widget=forms.CheckboxSelectMultiple(),
-        required=False,
-    )
     license_number = forms.CharField(
-        validators=[
-            MaxLengthValidator(8),
-            RegexValidator(
-                regex=r"^[A-Z]{3}",
-                message="The first 3 characters must be uppercase letters",
-                code="invalid_first_three_characters"
-            ),
-            RegexValidator(
-                regex=r"\d{5}$",
-                message="The last 5 characters must be numbers",
-                code="invalid_last_five_characters"
-            )
-        ]
+        validators=[validate_license_number],
     )
 
     class Meta(UserCreationForm.Meta):
@@ -46,30 +48,12 @@ class DriverCreateForm(UserCreationForm):
             "username", "first_name", "last_name", "email", "license_number"
         )
 
-    def clean_license_number(self) -> str:
-        license_number = self.cleaned_data["license_number"]
-        if Driver.objects.filter(license_number=license_number).exists():
-            raise ValidationError(
-                "A driver with this license number already exists."
-            )
-        return license_number
 
-
-class DriverLicenseUpdateForm(DriverCreateForm):
-    def __init__(self, *args, **kwargs):
-        super().__init__(*args, **kwargs)
-        for field_name in list(self.fields.keys()):
-            if field_name not in self.Meta.fields:
-                del self.fields[field_name]
+class DriverLicenseUpdateForm(forms.ModelForm):
+    license_number = forms.CharField(
+        validators=[validate_license_number],
+    )
 
     class Meta:
         model = Driver
         fields = ("license_number",)
-
-    def save(self, commit=True):
-        instance = self.instance
-        instance.license_number = self.cleaned_data["license_number"]
-
-        if commit:
-            instance.save()
-        return instance

@@ -29,16 +29,6 @@ def index(request):
     return render(request, "taxi/index.html", context=context)
 
 
-@login_required
-def toggle_driver(request, car_id):
-    car = get_object_or_404(Car, id=car_id)
-    if request.user in car.drivers.all():
-        car.drivers.remove(request.user)
-    else:
-        car.drivers.add(request.user)
-    return redirect("taxi:car-detail", pk=car_id)
-
-
 class ManufacturerListView(LoginRequiredMixin, generic.ListView):
     model = Manufacturer
     context_object_name = "manufacturer_list"
